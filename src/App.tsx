@@ -59,6 +59,10 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("sample")) open(SAMPLE_POOL);
+  }, [open]);
+
+  useEffect(() => {
     if (!pool) return;
     try {
       localStorage.setItem(gradesKey(pool.hash), JSON.stringify([...grades]));

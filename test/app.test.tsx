@@ -33,6 +33,13 @@ describe("judge-ui", () => {
     expect(screen.getByText(/3 of 15 graded/)).toBeTruthy();
   });
 
+  it("opens the sample straight away with ?sample", () => {
+    window.history.replaceState(null, "", "/?sample");
+    render(<App />);
+    expect(screen.getByRole("progressbar")).toBeTruthy();
+    window.history.replaceState(null, "", "/");
+  });
+
   it("undoes the last grade and goes back to it", () => {
     render(<App />);
     fireEvent.click(screen.getByText("Try the sample"));
