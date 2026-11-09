@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { type Grade, type Pool, keyOf, nextOpen, pace, parsePool, parseQrels, toQrels } from "./pool";
+import { type Grade, LIMITS, type Pool, keyOf, nextOpen, pace, parsePool, parseQrels, toQrels } from "./pool";
 import { SAMPLE_POOL } from "./sample";
 
 const LAST_POOL = "judge-ui:last-pool";
@@ -130,6 +130,12 @@ export function App() {
 
   const readFile = (f: File | undefined, then: (t: string) => void) => {
     if (!f) return;
+    if (f.size > LIMITS.bytes) {  // before reading: a huge file would freeze the tab first
+      const msg = `the file is larger than ${LIMITS.bytes / 1024 / 1024} MB`;
+      if (pool) setNote(msg);
+      else setError(msg);
+      return;
+    }
     const r = new FileReader();
     r.onload = () => then(String(r.result ?? ""));
     r.onerror = () => setError("could not read that file");

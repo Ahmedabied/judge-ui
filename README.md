@@ -63,9 +63,9 @@ minutes are not counted).
 
 | | |
 |---|---|
-| download, gzip | 73.7 KB (JavaScript 72.2, CSS 1.2, HTML 0.3), almost all of it React |
+| download, gzip | 73.8 KB (JavaScript 72.3, CSS 1.2, HTML 0.3), almost all of it React |
 | build | 0.65 s |
-| tests | 19, about 2 s |
+| tests | 20, about 2 s |
 
 `npm run build && npm run size` prints the sizes.
 

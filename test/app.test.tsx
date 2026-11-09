@@ -1,8 +1,8 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import axe from "axe-core";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { App } from "../src/App";
-import { parsePool } from "../src/pool";
+import { LIMITS, parsePool } from "../src/pool";
 import { SAMPLE_POOL } from "../src/sample";
 
 const key = (k: string) => act(() => void fireEvent.keyDown(window, { key: k }));
@@ -20,6 +20,17 @@ beforeEach(() => localStorage.clear());
 afterEach(cleanup);
 
 describe("judge-ui", () => {
+  it("refuses a file over the size limit before reading any of it", async () => {
+    render(<App />);
+    const big = new File(["{}"], "big.jsonl");
+    Object.defineProperty(big, "size", { value: LIMITS.bytes + 1 });
+    const read = vi.spyOn(FileReader.prototype, "readAsText");
+    await drop(big);
+    expect(read).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert").textContent).toMatch(/larger than 50 MB/);
+    read.mockRestore();
+  });
+
   it("grades with the keyboard and moves on", () => {
     render(<App />);
     fireEvent.click(screen.getByText("Try the sample"));
