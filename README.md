@@ -51,6 +51,10 @@ q1	e1	2
 Save it as `qrels/test.tsv` in your data folder. **Import qrels** loads an earlier export, or grades made with
 `relevance-gate judge` in the terminal, so you can switch between the two.
 
+**Two judges.** Give two people the same pool; each grades in their own browser and exports. Then
+`relevance-gate agree sam.tsv alex.tsv --disagreements settle.tsv` reports how far they agree (Cohen's kappa,
+weighted for graded relevance, with an interval) and lists the documents to talk through, biggest gaps first.
+
 Progress is saved in the browser after every grade, keyed by a hash of the pool, so closing the tab loses nothing.
 Reopen the same pool and it picks up where you stopped. A grades-per-minute counter shows your pace (pauses over two
 minutes are not counted).
@@ -74,8 +78,8 @@ grades anywhere. Pool files are capped at 50 MB and 100,000 documents, and field
 
 ## Limits
 
-- **One judge per browser.** There is no server, so no shared queue and no agreement between judges. Export and
-  merge qrels to combine people.
+- **One judge per browser.** There is no server, so no shared queue. Agreement between two judges is measured
+  from their exports with `relevance-gate agree`; settled grades are merged by hand.
 - **Pools over about 3 MB** are not kept for "Continue the last pool" (browser storage limits); grades still are.
   Drop the file again to continue.
 - **No rich documents.** Text only; HTML in a document is shown as text.
