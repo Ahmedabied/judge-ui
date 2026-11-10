@@ -19,6 +19,13 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
+      # The contract test runs judge-ui and relevance-gate on each other's files.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install 'relevance-gate @ git+https://github.com/Ahmedabied/relevance-gate@v0.2.0'
       - run: npm test
+        env:
+          NEED_RELEVANCE_GATE: "1"
       - run: npm run build
       - run: npm run size

@@ -54,7 +54,7 @@ export function parsePool(text: string): Pool {
   const problems: string[] = [];
   if (text.length > LIMITS.bytes) throw new Error(`the file is larger than ${LIMITS.bytes / 1024 / 1024} MB`);
   const byQuery = new Map<string, Item[]>();
-  const seen = new Set<string>();
+  const seen = new Map<string, number>();
   const lines = text.split(/\r?\n/);
   let count = 0;
   for (let n = 0; n < lines.length; n++) {
@@ -81,8 +81,12 @@ export function parsePool(text: string): Pool {
       continue;
     }
     const key = `${queryId}\t${docId}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
+    const first = seen.get(key);
+    if (first !== undefined) {
+      problems.push(`line ${n + 1}: repeats line ${first}`);
+      continue;
+    }
+    seen.set(key, n + 1);
     if (++count > LIMITS.items) throw new Error(`more than ${LIMITS.items} documents to judge`);
     const clip = (s: string | null) => (s ?? "").slice(0, LIMITS.field);
     const item = { queryId, query: clip(query), docId, title: clip(str(row.title)), text: clip(str(row.text)) };
@@ -96,7 +100,29 @@ export function parsePool(text: string): Pool {
 
 export const keyOf = (i: { queryId: string; docId: string }) => `${i.queryId}\t${i.docId}`;
 
-/** qrels TSV as relevance-gate writes it: a header, then query-id, corpus-id, score. In pool order. */
+export interface Places {
+  /** Where each document is in the pool, by its key. */
+  at: Map<string, number>;
+  /** Each query's number (from 1), where its documents start, and how many there are. */
+  queries: Map<string, { n: number; start: number; size: number }>;
+}
+
+/** Look up once where everything is, so showing "query 3 of 40, document 2 of 10" does not walk the pool on
+ * every key press. A query's documents sit together, as parsePool lays them out. */
+export function places(items: Item[]): Places {
+  const at = new Map<string, number>();
+  const queries: Places["queries"] = new Map();
+  items.forEach((item, i) => {
+    at.set(keyOf(item), i);
+    const q = queries.get(item.queryId);
+    if (q) q.size++;
+    else queries.set(item.queryId, { n: queries.size + 1, start: i, size: 1 });
+  });
+  return { at, queries };
+}
+
+/** qrels TSV as relevance-gate writes it: a header, then query-id, corpus-id, score. In pool order. Only what
+ * was graded here: `relevance-gate judge --take` adds it to a qrels file that already has grades. */
 export function toQrels(items: Item[], grades: Map<string, Grade>): string {
   const rows = items.filter((i) => grades.has(keyOf(i))).map((i) => `${i.queryId}\t${i.docId}\t${grades.get(keyOf(i))}`);
   return ["query-id\tcorpus-id\tscore", ...rows].join("\n") + "\n";

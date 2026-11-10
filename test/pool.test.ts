@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type Grade, LIMITS, keyOf, nextOpen, pace, parsePool, parseQrels, toQrels } from "../src/pool";
+import { type Grade, LIMITS, keyOf, nextOpen, pace, parsePool, parseQrels, places, toQrels } from "../src/pool";
 
 const line = (q: string, d: string, extra: object = {}) => JSON.stringify({ query_id: q, query: `query ${q}`, doc_id: d, ...extra });
 
@@ -10,7 +10,7 @@ describe("parsePool", () => {
     expect(p.items.map((i) => i.queryId)).toEqual(["q1", "q1", "q2"]);
     expect(new Set(p.items.map((i) => i.docId))).toEqual(new Set(["a", "b", "x"]));
     expect(p.queries).toBe(2);
-    expect(p.problems).toEqual(["line 2: not a JSON object", "line 5: not a JSON object", "line 6: needs query_id, query and doc_id"]);
+    expect(p.problems).toEqual(["line 2: not a JSON object", "line 5: not a JSON object", "line 6: needs query_id, query and doc_id", "line 7: repeats line 1"]);
   });
 
   it("orders documents blind but the same on every load", () => {
@@ -62,6 +62,13 @@ describe("navigation and pace", () => {
     expect(nextOpen(p.items, g, 2)).toBe(0);
     p.items.forEach((i) => g.set(keyOf(i), 0));
     expect(nextOpen(p.items, g, 0)).toBe(-1);
+  });
+
+  it("knows where every document is, and each query's number and size", () => {
+    const p = parsePool([line("q1", "a"), line("q2", "x"), line("q1", "b"), line("q2", "y"), line("q2", "z")].join("\n"));
+    const w = places(p.items);
+    expect([...w.queries]).toEqual([["q1", { n: 1, start: 0, size: 2 }], ["q2", { n: 2, start: 2, size: 3 }]]);
+    p.items.forEach((item, i) => expect(w.at.get(keyOf(item))).toBe(i));
   });
 
   it("counts grades per minute without long pauses", () => {
