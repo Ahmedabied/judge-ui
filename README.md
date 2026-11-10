@@ -86,6 +86,13 @@ grades anywhere. Pool files are capped at 50 MB and 100,000 documents, and field
 - **No pace number for a real session yet.** The counter is there; a 50-query timing will be added once someone
   judges one.
 
+## Related
+
+- [relevance-gate](https://github.com/Ahmedabied/relevance-gate) makes the pool files, scores a search engine on the
+  qrels this exports, and fails a pull request when search gets worse.
+- [judge-bias](https://github.com/Ahmedabied/judge-bias) is about the other kind of judge: it measures whether an
+  LLM judge favours its own model's answers, with human judgments as the yardstick.
+
 ## Development
 
 ```sh
